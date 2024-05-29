@@ -8,6 +8,7 @@ const loadModel = (sequelize, DataTypes) => {
      */
     static associate (models) {
       // define association here
+      // Solution: Para poder asociar los productos a una orden
       const OrderProducts = sequelize.define('OrderProducts', {
         quantity: DataTypes.INTEGER,
         unityPrice: DataTypes.DOUBLE

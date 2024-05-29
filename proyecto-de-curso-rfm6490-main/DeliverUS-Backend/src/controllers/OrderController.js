@@ -109,16 +109,23 @@ const indexCustomer = async function (req, res) {
 // 3. In order to save the order and related products, start a transaction, store the order, store each product linea and commit the transaction
 // 4. If an exception is raised, catch it and rollback the transaction
 
+// 1º: Hace la creación del pedido (Order) con .build
+// 2º: Tenemos que actualizar el precio del pedido en función de los productos añadidos, variable precio
+// 3º: Recroremos los productos de la orden (for)
+// 4º: Obtenemos cada proucto (finByPk)
+// 5º: Calculamos el precio mediante las propiedades creadas especificamente para ello (quantity)
+
 const create = async function (req, res) {
   const tr = await sequelizeSession.transaction() // start the transaction
   try {
     // 1. If price is greater than 10€, shipping costs have to be 0.
     // 2. If price is less or equals to 10€, shipping costs have to be restaurant default shipping costs and have to be added to the order total price
-    let pedidoCreado = Order.build(req.body)
+
+    let pedidoCreado = Order.build(req.body)  // 1º
     let precio = 0
     for (const pr of req.body.products) {
-      const datoProducto = await Product.findByPk(pr.productId)
-      precio += pr.quantity * datoProducto.price
+      const datoProducto = await Product.findByPk(pr.productId) // Prodcuto de la BD (para coger el precio)
+      precio += pr.quantity * datoProducto.price  // 2º
     }
     let shippingCosts = 0
     if (precio > 10) {
@@ -130,15 +137,18 @@ const create = async function (req, res) {
 
     const finalPrice = precio + shippingCosts
 
+    // Solution: Para guardar el pedido (Order) con todo (productos más coste envío)
     pedidoCreado.createdAt = new Date()
     pedidoCreado.userId = req.user.id
-    pedidoCreado.price = finalPrice
+    pedidoCreado.price = finalPrice // Este es el precio de la orden, no del producto
     pedidoCreado.shippingCosts = shippingCosts
     pedidoCreado = await pedidoCreado.save({ tr })
 
     // 3. In order to save the order and related products, start a transaction, store the order, store each product linea and commit the transaction
+
+    // Solution: Recorremos los productos, los buscamos en la base de datos, añadimos el producto al pedido actualizando los valores necesarios
     for (const pr of req.body.products) {
-      const databaseProducto = await Product.findByPk(pr.productId)
+      const databaseProducto = await Product.findByPk(pr.productId) // Producto de la pase de datos
       await pedidoCreado.addProduct(databaseProducto, { through: { quantity: pr.quantity, unityPrice: databaseProducto.price }, tr })
     }
     await tr.commit()

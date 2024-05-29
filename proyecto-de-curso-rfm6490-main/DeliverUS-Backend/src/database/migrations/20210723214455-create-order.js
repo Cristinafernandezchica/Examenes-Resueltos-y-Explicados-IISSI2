@@ -81,6 +81,7 @@ module.exports = {
           key: 'id'
         }
       },
+      // Solution: Para guardar la cantidad de cada producto
       quantity: {
         allowNull: false,
         type: Sequelize.INTEGER

@@ -6,7 +6,9 @@ const loadModel = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
+    
     static associate (models) {
+      // Solution: Para poder asociar los productos a las ordenes
       const OrderProducts = sequelize.define('OrderProducts', {
         quantity: DataTypes.INTEGER,
         unityPrice: DataTypes.DOUBLE
