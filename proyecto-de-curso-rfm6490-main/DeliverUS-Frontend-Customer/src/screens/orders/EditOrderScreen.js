@@ -17,23 +17,28 @@ export default function EditOrderScreen ({ navigation, route }) {
   const { loggedInUser } = useContext(AuthorizationContext)
   const [restaurant, setRestaurant] = useState({})
   const [backendErrors, setBackendErrors] = useState()
-  const [products, setProducts] = useState([])
-  const [productQuantity, setProductQuantity] = useState(new Map())
-  const [orderToBeConfirmed, setOrderToBeConfirmed] = useState(null)
-  const [productsInOrder, setProducstInOrder] = useState([])
-  const [cancelEditOrder, setCancelEditOrder] = useState(false)
-  const [originalOrder, setOriginalOrder] = useState([])
-  const [address, setAddress] = useState('')
+  const [products, setProducts] = useState([])  // 1. Para guardar los productos
+  const [productQuantity, setProductQuantity] = useState(new Map()) // 2. Map con las cantidades de cada producto
+  const [orderToBeConfirmed, setOrderToBeConfirmed] = useState(null)  // 3. Para confirmar la edicion de la orden
+  const [productsInOrder, setProducstInOrder] = useState([])  // 4. Para guardar los productos que hay en la orden
+  const [cancelEditOrder, setCancelEditOrder] = useState(false) // 5. Para cancelar la edicion de la orden
+  const [originalOrder, setOriginalOrder] = useState([])  // 6. Para coger la orden original (sin editar)
+  const [address, setAddress] = useState('') // Para cambiar la dirección de envío
 
   useEffect(() => {
     fetchAll()
   }, [route, loggedInUser])
 
+  // Solution: Para coger los productos con cantidad mayor a 0
+  // 1. Cogemos los productos del estado creado (products, setProducts)
   useEffect(() => {
     const productsNewOrder = products.filter(p => productQuantity.get(p.id) > 0)
     setProducstInOrder(productsNewOrder)
   }, [orderToBeConfirmed])
 
+  // Solution: Para confirmar la edicion de la orden
+  // 2. Creamos el Map con el producto y la cantidad del mismo (productQuantity es el estado en 2. )
+  // 3. Parseamos los valores para confirmarlos (setOrderToBeConfirmed estado 3. )
   const confirmOrder = async () => {
     const productQuantityReshaped = [...productQuantity].map(([productId, quantity]) => ({ productId, quantity }))
       .filter(element => element.quantity > 0)
@@ -64,10 +69,12 @@ export default function EditOrderScreen ({ navigation, route }) {
             <TextRegular textStyle={styles.description}>{restaurant.restaurantCategory ? restaurant.restaurantCategory.name : ''}</TextRegular>
           </View>
         </ImageBackground>
+
+        {/* SOLUTION: Botón para confitmar la orden editada */}
         <Pressable
           onPress={ () => {
             if (loggedInUser) {
-              confirmOrder()
+              confirmOrder()    // Método creado anteriormente
             } else {
               showMessage({
                 message: 'You must be logged in to place an order ',
@@ -93,8 +100,9 @@ export default function EditOrderScreen ({ navigation, route }) {
               </TextRegular>
           </View>
         </Pressable>
+
         <Pressable
-          onPress={() => setCancelEditOrder(true)}
+          onPress={() => setCancelEditOrder(true)}  // 5. 
           style={({ pressed }) => [
             {
               backgroundColor: pressed
@@ -124,12 +132,15 @@ export default function EditOrderScreen ({ navigation, route }) {
         <TextSemiBold textStyle={styles.price}>{item.price.toFixed(2)}€</TextSemiBold>
         {item.availability &&
             <View style={styles.actionButtonsContainer}>
+              {/* SOLUTION: Botón para BAJAR cantidad de producto 
+                  
+                  RECORDAMOS: productQuantity es un Map con los productos y su cantidad asociada (2. ) --> setProductQuantity*/}
               <Pressable
                 onPress={() => {
-                  if (productQuantity.get(item.id) > 0) {
-                    const newProductQuantity = productQuantity.set(item.id, productQuantity.get(item.id) - 1)
-                    setProductQuantity(newProductQuantity)
-                    setProducts([...products])
+                  if (productQuantity.get(item.id) > 0) { // Si la cantidad en la orden es mayor que 0, entonces permitimos bajar
+                    const newProductQuantity = productQuantity.set(item.id, productQuantity.get(item.id) - 1) // Disminuimos la cantidad actual en el Map
+                    setProductQuantity(newProductQuantity)  // Actualizamos el Map (2. )
+                    setProducts([...products])   // Actualizamos los productos (por si hemos eliminado algún producto)
                   }
                 }
                 }
@@ -145,11 +156,15 @@ export default function EditOrderScreen ({ navigation, route }) {
                   <MaterialCommunityIcons name='minus-circle' color={'white'} size={20} />
                 </View>
               </Pressable>
+              
+              {/* SOLUTION: Cuadro que contabiliza la cantidad del producto correspondiente */}
               <View style={styles.quantityBorder}>
                 <TextRegular textStyle={[{ justifyContent: 'space-around', alignSelf: 'center' }]}>
                   {productQuantity.get(item.id)}
                 </TextRegular>
               </View>
+
+              {/* SOLUTION: Botón para AUMENTAR la cantidad de un producto */}
               <Pressable
                 onPress={() => {
                   const newProductQuantity = productQuantity.set(item.id, productQuantity.get(item.id) + 1)
@@ -188,6 +203,7 @@ export default function EditOrderScreen ({ navigation, route }) {
     )
   }
 
+  // SOLUTION: Para coger los datos de la orden
   const fetchAll = async () => {
     try {
       const fetchedRestaurant = await getDetail(route.params.id)
@@ -213,6 +229,7 @@ export default function EditOrderScreen ({ navigation, route }) {
     }
   }
 
+  // SOLUTION: Actualizar la orden llamando a Backend
   const updateOrder = async (values) => {
     setBackendErrors([])
     try {
@@ -239,6 +256,7 @@ export default function EditOrderScreen ({ navigation, route }) {
 
   return (
     <>
+      {/* SOLUTION: Pantallas para confirmar o cancelar la edición de la orden */}
       <ConfirmOrderModal
         shippingCosts={restaurant.shippingCosts}
         data={productsInOrder}

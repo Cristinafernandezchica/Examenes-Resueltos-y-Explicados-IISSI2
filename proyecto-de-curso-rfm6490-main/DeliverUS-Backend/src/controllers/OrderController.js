@@ -111,9 +111,10 @@ const indexCustomer = async function (req, res) {
 
 // 1º: Hace la creación del pedido (Order) con .build
 // 2º: Tenemos que actualizar el precio del pedido en función de los productos añadidos, variable precio
-// 3º: Recroremos los productos de la orden (for)
-// 4º: Obtenemos cada proucto (finByPk)
+// 3º: Recorremos los productos de la orden (for), los pasados por el cliente (req.body.products (OrderProducts))
+// 4º: Obtenemos cada proucto (findByPk) (Product)
 // 5º: Calculamos el precio mediante las propiedades creadas especificamente para ello (quantity)
+// 6º: Actualizamos las variables del pedido que vamos a crar
 
 const create = async function (req, res) {
   const tr = await sequelizeSession.transaction() // start the transaction
@@ -148,7 +149,7 @@ const create = async function (req, res) {
 
     // Solution: Recorremos los productos, los buscamos en la base de datos, añadimos el producto al pedido actualizando los valores necesarios
     for (const pr of req.body.products) {
-      const databaseProducto = await Product.findByPk(pr.productId) // Producto de la pase de datos
+      const databaseProducto = await Product.findByPk(pr.productId) // Producto de la BD
       await pedidoCreado.addProduct(databaseProducto, { through: { quantity: pr.quantity, unityPrice: databaseProducto.price }, tr })
     }
     await tr.commit()
