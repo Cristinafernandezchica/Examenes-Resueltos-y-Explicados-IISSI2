@@ -46,7 +46,7 @@ module.exports = {
       heroImage: {
         type: Sequelize.STRING
       },
-      // Esto lo tendriamos que añadir nosotros
+      // SOLUCIÓN: Esto lo tendriamos que añadir nosotros
       status: {
         type: Sequelize.ENUM,
         values: [
