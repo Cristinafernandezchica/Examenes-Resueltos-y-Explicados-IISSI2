@@ -28,7 +28,8 @@ exports.indexOwner = async function (req, res) {
   try {
     const restaurants = await Restaurant.findAll(
       {
-        attributes: ['id', 'name', 'description', 'address', 'postalCode', 'url', 'shippingCosts', 'averageServiceMinutes', 'email', 'phone', 'logo', 'heroImage', 'status', 'restaurantCategoryId'],
+        // SOLUTION: Añadimos la propiedad discount
+        attributes: ['id', 'name', 'description', 'address', 'postalCode', 'url', 'shippingCosts', 'averageServiceMinutes', 'email', 'phone', 'discount', 'logo', 'heroImage', 'status', 'restaurantCategoryId'],
         where: { userId: req.user.id }
       })
     res.json(restaurants)

@@ -4,7 +4,7 @@ import * as ExpoImagePicker from 'expo-image-picker'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import * as yup from 'yup'
 import DropDownPicker from 'react-native-dropdown-picker'
-import { create, getRestaurantCategories } from '../../api/RestaurantEndpoints'
+import { update, getRestaurantCategories, getDetail } from '../../api/RestaurantEndpoints'
 import InputItem from '../../components/InputItem'
 import TextRegular from '../../components/TextRegular'
 import * as GlobalStyles from '../../styles/GlobalStyles'
@@ -13,13 +13,16 @@ import restaurantBackground from '../../../assets/restaurantBackground.jpeg'
 import { showMessage } from 'react-native-flash-message'
 import { ErrorMessage, Formik } from 'formik'
 import TextError from '../../components/TextError'
+import { prepareEntityImages } from '../../api/helpers/FileUploadHelper'
+import { buildInitialValues } from '../Helper'
 
-export default function CreateRestaurantScreen ({ navigation }) {
+export default function EditRestaurantScreen ({ navigation, route }) {
   const [open, setOpen] = useState(false)
   const [restaurantCategories, setRestaurantCategories] = useState([])
   const [backendErrors, setBackendErrors] = useState()
+  const [restaurant, setRestaurant] = useState({})
 
-  const initialRestaurantValues = { name: null, description: null, address: null, postalCode: null, url: null, shippingCosts: null, email: null, phone: null, restaurantCategoryId: null }
+  const [initialRestaurantValues, setInitialRestaurantValues] = useState({ name: null, description: null, address: null, postalCode: null, url: null, shippingCosts: null, email: null, phone: null, restaurantCategoryId: null, logo: null, heroImage: null })
   const validationSchema = yup.object().shape({
     name: yup
       .string()
@@ -49,12 +52,36 @@ export default function CreateRestaurantScreen ({ navigation }) {
       .string()
       .nullable()
       .max(255, 'Phone too long'),
+    // SOLUTION
+    discount: yup
+      .number()
+      .positive('Please provide a valid discount value'),
     restaurantCategoryId: yup
       .number()
       .positive()
       .integer()
       .required('Restaurant category is required')
   })
+
+  useEffect(() => {
+    async function fetchRestaurantDetail () {
+      try {
+        const fetchedRestaurant = await getDetail(route.params.id)
+        const preparedRestaurant = prepareEntityImages(fetchedRestaurant, ['logo', 'heroImage'])
+        setRestaurant(preparedRestaurant)
+        const initialValues = buildInitialValues(preparedRestaurant, initialRestaurantValues)
+        setInitialRestaurantValues(initialValues)
+      } catch (error) {
+        showMessage({
+          message: `There was an error while retrieving restaurant details (id ${route.params.id}). ${error}`,
+          type: 'error',
+          style: GlobalStyles.flashStyle,
+          titleStyle: GlobalStyles.flashTextStyle
+        })
+      }
+    }
+    fetchRestaurantDetail()
+  }, [route])
 
   useEffect(() => {
     async function fetchRestaurantCategories () {
@@ -104,12 +131,12 @@ export default function CreateRestaurantScreen ({ navigation }) {
     }
   }
 
-  const createRestaurant = async (values) => {
+  const updateRestaurant = async (values) => {
     setBackendErrors([])
     try {
-      const createdRestaurant = await create(values)
+      const updatedRestaurant = await update(restaurant.id, values)
       showMessage({
-        message: `Restaurant ${createdRestaurant.name} succesfully created`,
+        message: `Restaurant ${updatedRestaurant.name} succesfully updated`,
         type: 'success',
         style: GlobalStyles.flashStyle,
         titleStyle: GlobalStyles.flashTextStyle
@@ -120,11 +147,13 @@ export default function CreateRestaurantScreen ({ navigation }) {
       setBackendErrors(error.errors)
     }
   }
+
   return (
     <Formik
+      enableReinitialize
       validationSchema={validationSchema}
       initialValues={initialRestaurantValues}
-      onSubmit={createRestaurant}>
+      onSubmit={updateRestaurant}>
       {({ handleSubmit, setFieldValue, values }) => (
         <ScrollView>
           <View style={{ alignItems: 'center' }}>
@@ -160,6 +189,11 @@ export default function CreateRestaurantScreen ({ navigation }) {
               <InputItem
                 name='phone'
                 label='Phone:'
+              />
+              {/* SOLUTION: Campo para introducir el descuento del restaurante */}
+              <InputItem
+                name='discount'
+                label='Discount percentage:'
               />
 
               <DropDownPicker
@@ -218,12 +252,12 @@ export default function CreateRestaurantScreen ({ navigation }) {
                   },
                   styles.button
                 ]}>
-              <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
-                <MaterialCommunityIcons name='content-save' color={'white'} size={20}/>
-                <TextRegular textStyle={styles.text}>
-                  Save
-                </TextRegular>
-              </View>
+                <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+                  <MaterialCommunityIcons name='content-save' color={'white'} size={20}/>
+                  <TextRegular textStyle={styles.text}>
+                    Save
+                  </TextRegular>
+                </View>
               </Pressable>
             </View>
           </View>

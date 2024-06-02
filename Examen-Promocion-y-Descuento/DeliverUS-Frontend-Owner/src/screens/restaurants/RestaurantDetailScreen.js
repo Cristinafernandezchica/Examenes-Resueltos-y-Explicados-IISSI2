@@ -4,7 +4,8 @@ import { StyleSheet, View, FlatList, ImageBackground, Image, Pressable } from 'r
 import { showMessage } from 'react-native-flash-message'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { getDetail } from '../../api/RestaurantEndpoints'
-import { remove } from '../../api/ProductEndpoints'
+// importamos promote
+import { remove, promote } from '../../api/ProductEndpoints'
 import ImageCard from '../../components/ImageCard'
 import TextRegular from '../../components/TextRegular'
 import TextSemiBold from '../../components/TextSemibold'
@@ -58,14 +59,52 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
     return (
       <ImageCard
         imageUri={item.image ? { uri: process.env.API_BASE_URL + '/' + item.image } : defaultProductImage}
-        title={item.name}
+        // SOLUTION: Nombre producto + Porcentaje aplicado
+        title={(
+          <View style = {styles.productDetailsContainer}>
+            <TextRegular style= {styles.title}>{item.name}</TextRegular>
+            {item.promote && <TextSemiBold textStyle = {styles.priceOff} numberOfLines={2}>({restaurant.discount}% off)</TextSemiBold>}
+          </View>)}
       >
         <TextRegular numberOfLines={2}>{item.description}</TextRegular>
-        <TextSemiBold textStyle={styles.price}>{item.price.toFixed(2)}€</TextSemiBold>
+        {/* SOLUTION: Precio original + Precio con procentaje */}
+        <View style = {styles.productDetailsContainer}>
+          <TextSemiBold textStyle={styles.price}>{item.price.toFixed(2)}€ </TextSemiBold>
+          {item.promote &&
+            <TextSemiBold textStyle={styles.priceOff }> Price promoted: { item.price - (item.price * (restaurant.discount) / 100)}€</TextSemiBold>
+          }
+        </View>
         {!item.availability &&
           <TextRegular textStyle={styles.availability }>Not available</TextRegular>
         }
-         <View style={styles.actionButtonsContainer}>
+
+        <View style={styles.actionButtonsContainer}>
+
+          {/* SOLUTION: Botón para promocionar producto */}
+          {restaurant.discount !== 0 &&
+          <Pressable
+              onPress={() => { promoteProduct(item) }}
+              style={({ pressed }) => [
+                {
+                  backgroundColor: pressed
+                    ? GlobalStyles.brandSuccessTap
+                    : GlobalStyles.brandSuccess
+                },
+                styles.actionButton
+              ]}>
+            <View style={[{ flex: 1, flexDirection: 'row', justifyContent: 'center' }]}>
+              {!item.promote && <> <MaterialCommunityIcons name='star-outline' color={'white'} size={20}/>
+              <TextRegular textStyle={styles.text}>
+                Promote
+              </TextRegular></>}
+              {item.promote && <> <MaterialCommunityIcons name='star' color={'white'} size={20}/>
+              <TextRegular textStyle={styles.text}>
+                Demote
+              </TextRegular></>}
+            </View>
+          </Pressable>
+          }
+
           <Pressable
             onPress={() => navigation.navigate('EditProductScreen', { id: item.id })
             }
@@ -105,6 +144,30 @@ export default function RestaurantDetailScreen ({ navigation, route }) {
         </View>
       </ImageCard>
     )
+  }
+
+  // SOLUTION  -->  Promocionar un producto (se coloca en el botón)
+  const promoteProduct = async (product) => {
+    try {
+      const promoteDemote = product.promote === true ? 'promoted' : 'demoted'
+      await promote(product.id)
+      await fetchRestaurantDetail()
+      showMessage({
+        message: `Product ${product.name} succesfully ${promoteDemote}.`,
+        type: 'success',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
+    } catch (error) {
+      const promoteDemote = product.promote === true ? 'promoted' : 'demoted'
+      console.log(error)
+      showMessage({
+        message: `Product ${product.name} could not be ${promoteDemote}.`,
+        type: 'error',
+        style: GlobalStyles.flashStyle,
+        titleStyle: GlobalStyles.flashTextStyle
+      })
+    }
   }
 
   const renderEmptyProductsList = () => {
@@ -225,9 +288,10 @@ const styles = StyleSheet.create({
     marginLeft: 5
   },
   availability: {
+    fontSize: 14,
     textAlign: 'right',
     marginRight: 5,
-    color: GlobalStyles.brandSecondary
+    color: GlobalStyles.brandPrimary
   },
   actionButton: {
     borderRadius: 8,
@@ -237,12 +301,23 @@ const styles = StyleSheet.create({
     padding: 10,
     alignSelf: 'center',
     flexDirection: 'column',
-    width: '50%'
+    width: '33%'
   },
   actionButtonsContainer: {
     flexDirection: 'row',
     bottom: 5,
     position: 'absolute',
     width: '90%'
+  },
+  // SOLUTION: Para el estilo del porcentaje al lado del nombre del producto
+  priceOff: {
+    fontSize: 13,
+    color: 'red',
+    alignSelf: 'center',
+    marginLeft: 5
+  },
+  productDetailsContainer: {
+    flexDirection: 'row',
+    marginBottom: 10
   }
 })

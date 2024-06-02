@@ -39,6 +39,12 @@ module.exports = (sequelize, DataTypes) => {
     averageServiceMinutes: DataTypes.DOUBLE,
     email: DataTypes.STRING,
     phone: DataTypes.STRING,
+    // SOLUTION: Propiedad discount
+    discount: {
+      allowNull: false,
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
     logo: DataTypes.STRING,
     heroImage: DataTypes.STRING,
     status: {

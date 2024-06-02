@@ -41,6 +41,12 @@ module.exports = {
       phone: {
         type: Sequelize.STRING
       },
+      // SOLUTION: Propiedad descuento para aplicar a los productos
+      discount: {
+        allowNull: false,
+        defaultValue: 0,
+        type: Sequelize.INTEGER
+      },
       logo: {
         type: Sequelize.STRING
       },

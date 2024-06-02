@@ -26,6 +26,12 @@ module.exports = (sequelize, DataTypes) => {
     image: DataTypes.STRING,
     order: DataTypes.INTEGER,
     availability: DataTypes.BOOLEAN,
+    // SOLUTION: Propiedad demote (CON BOOLEAN)
+    promote: {
+      allowNull: false,
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
     restaurantId: DataTypes.INTEGER,
     productCategoryId: DataTypes.INTEGER
   }, {

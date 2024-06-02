@@ -3,6 +3,7 @@ const ProductValidation = require('../controllers/validation/ProductValidation')
 const ProductController = require('../controllers/ProductController')
 const Product = require('../models').Product
 const multer = require('multer')
+const ProductMiddleware = require('../middlewares/ProductMiddleware')
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -55,4 +56,13 @@ module.exports = (options) => {
       middlewares.checkProductOwnership,
       ProductController.destroy
     )
+
+  // SOLUTION: Creamos una nueva ruta para promocionar
+  app.route('/products/:productId/promote')
+    .patch(
+      middlewares.isLoggedIn,
+      middlewares.hasRole('owner'),
+      middlewares.checkEntityExists(Product, 'productId'),
+      ProductMiddleware.checkRestaurantHasDiscount,
+      ProductController.promote)
 }

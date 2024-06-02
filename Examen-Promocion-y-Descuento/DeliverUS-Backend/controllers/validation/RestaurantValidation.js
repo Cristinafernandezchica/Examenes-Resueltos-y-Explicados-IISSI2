@@ -12,6 +12,8 @@ module.exports = {
     check('shippingCosts').exists().isFloat({ min: 0 }).toFloat(),
     check('email').optional({ nullable: true, checkFalsy: true }).isString().isEmail().trim(),
     check('phone').optional({ nullable: true, checkFalsy: true }).isString().isLength({ min: 1, max: 255 }).trim(),
+    // SOLUTION
+    check('discount').isInt({ min: 0, max: 100 }).toInt(),
     check('restaurantCategoryId').exists({ checkNull: true }).isInt({ min: 1 }).toInt(),
     check('userId').not().exists(),
     check('heroImage').custom((value, { req }) => {
@@ -36,6 +38,8 @@ module.exports = {
     check('shippingCosts').exists().isFloat({ min: 0 }).toFloat(),
     check('email').optional({ nullable: true, checkFalsy: true }).isString().isEmail().trim(),
     check('phone').optional({ nullable: true, checkFalsy: true }).isString().isLength({ min: 1, max: 255 }).trim(),
+    // SOLUTION
+    check('discount').isInt({ min: 0, max: 100 }).toInt(),
     check('restaurantCategoryId').exists({ checkNull: true }).isInt({ min: 1 }).toInt(),
     check('userId').not().exists(),
     check('heroImage').custom((value, { req }) => {

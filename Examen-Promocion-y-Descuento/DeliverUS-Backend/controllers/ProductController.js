@@ -5,6 +5,7 @@ const Order = models.Order
 const Restaurant = models.Restaurant
 const RestaurantCategory = models.RestaurantCategory
 const ProductCategory = models.ProductCategory
+// const sequelizeSession = models.sequelizeSession
 
 const Sequelize = require('sequelize')
 
@@ -61,6 +62,70 @@ exports.update = async function (req, res) {
     res.json(updatedProduct)
   } catch (err) {
     res.status(500).send(err)
+  }
+}
+
+/*
+// SOLUTION: Promocionar un producto (CON TRANSACCIÓN)
+const { sequelize } = require('../models') // Asegúrate de importar la instancia de sequelize
+
+exports.promote = async function (req, res) {
+  const t = await sequelize.transaction(); // Inicia la transacción
+  try {
+    // Busca el producto en la BD
+    const product = await Product.findOne({ where: { id: req.params.productId }, transaction: t })
+    // Si existe el producto
+    if (product !== null) {
+      // Si está promocionado
+      if (product.promote === 'promote') {
+        // Le quitamos la promoción
+        product.promote = 'demote'
+      // Si no esta promocionado
+      } else {
+        // Lo promocionamos
+        product.promote = 'promote'
+      }
+      // Guardamos los cambios
+      await product.save({ transaction: t })
+      await t.commit(); // Si todo es correcto, hacemos commit de la transacción
+      res.json(product)
+    } else {
+      await t.rollback(); // Si no se encuentra el producto, hacemos rollback
+      res.status(404).send('No se ha encontrado el producto')
+    }
+  } catch (error) {
+    await t.rollback(); // En caso de error, hacemos rollback
+    res.status(500).send(error.message)
+  }
+}
+
+*/
+
+// SOLUTION: Promocionar un producto
+exports.promote = async function (req, res) {
+  try {
+    // Busca el producto en la BD
+    const product = await Product.findOne({ where: { id: req.params.productId } })
+    // Si existe el producto
+    if (product !== null) {
+      // Si está promocionado
+      if (product.promote) {
+        // Le quitamos la promoción
+        product.promote = false
+      // Si no esta promocionado
+      } else {
+        // Lo promocionamos
+        product.promote = true
+      }
+      // Guardamos los cambios
+      await product.save()
+      res.json(product)
+    } else {
+      res.status(404).send('No se ha encontrado el producto')
+    }
+  } catch (error) {
+    // await t.rollback()
+    res.status(500).send(error)
   }
 }
 
