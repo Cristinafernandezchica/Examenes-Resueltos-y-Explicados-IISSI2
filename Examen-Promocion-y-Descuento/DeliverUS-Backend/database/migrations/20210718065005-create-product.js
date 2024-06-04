@@ -29,13 +29,13 @@ module.exports = {
       availability: {
         type: Sequelize.BOOLEAN
       },
-      // SOLUTION: Propiedad demote para propmocionar los productos (CON BOOLEAN)
+      // SOLUTION: Propiedad promote para propmocionar los productos (CON BOOLEAN)
       promote: {
         allowNull: false,
         type: Sequelize.BOOLEAN,
         defaultValue: false
       },
-      // SOLUTION: Propiedad demote para propmocionar los productos (CON ENUM)
+      // SOLUTION: Propiedad promote para propmocionar los productos (CON ENUM)
       /*
       promote: {
         type: Sequelize.ENUM,
